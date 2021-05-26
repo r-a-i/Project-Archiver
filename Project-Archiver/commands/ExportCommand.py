@@ -34,8 +34,17 @@ def export_folder(root_folder, output_folder, file_types, write_version, export_
         else:
             new_folder = output_folder
 
-        export_folder(folder, new_folder, file_types, write_version, export_all_versions, skip_duplicates, name_option, folder_preserve)
-
+        try:
+            export_folder(folder, new_folder, file_types, write_version, export_all_versions, skip_duplicates, name_option, folder_preserve)
+        except:
+            ao.ui.messageBox('export_folder %s Failed. Data files %i' % ( folder.name, len(folder.dataFiles)) )
+    
+    #ao.ui.messageBox('Starting Export of Folder %s' % root_folder.name)
+    if len(root_folder.dataFiles) == 0:
+        #ao.ui.messageBox('No datafiles to process in Folder %s' % root_folder.name)
+        adsk.doEvents()
+        return
+    
     # Set styles of progress dialog.
     app = adsk.core.Application.get()
     ui  = app.userInterface
@@ -81,6 +90,7 @@ def export_folder(root_folder, output_folder, file_types, write_version, export_
 
                     # TODO add handling
                     except ValueError as e:
+                        FAILED_FILES.append(ao.document.name)
                         ao.ui.messageBox('export_folder Failed:ValueError\n{}'.format(traceback.format_exc()))
 
                     except AttributeError as e:
@@ -102,6 +112,7 @@ def open_doc(data_file):
             document.activate()
             return document
     except:
+        FAILED_FILES.append( data_file.name )
         ao = AppObjects()
         ao.ui.messageBox('open_doc failed for file:{name}\n{tb}'.format(name=data_file.name,tb=traceback.format_exc()))
 
